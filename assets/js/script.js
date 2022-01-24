@@ -12,7 +12,7 @@ const H = (dom_canvas.height = window.innerHeight);
 let snake,
   food,
   currentHue,
-  cells = 101,
+  cells = 82,
   cellSize,
   isGameOver = false,
   tails = [],
@@ -57,7 +57,7 @@ let helpers = {
     }
   },
   drawGrid() {
-    CTX.lineWidth = 1.1;
+    CTX.lineWidth = 1.5;
     CTX.strokeStyle = "#232332";
     CTX.shadowBlur = 0;
     for (let i = 1; i < cells; i++) {
@@ -199,11 +199,11 @@ class Snake {
     if (y + cellSize > H) {
       this.pos.y = 0;
     }
-    if (y < 0) {
-      this.pos.y = H - cellSize;
-    }
     if (x < 0) {
       this.pos.x = W - cellSize;
+    }
+    if (y < 0) {
+      this.pos.y = H - cellSize - (window.innerHeight % cellSize);
     }
   }
   controlls() {
@@ -236,7 +236,7 @@ class Snake {
     if (!this.delay--) {
       // console.log(this.pos, food.pos);
       if (helpers.isCollision(this.pos, food.pos)) {
-        // incrementScore();
+        incrementScore();
         particleSplash();
         food.spawn();
         this.total++;
@@ -255,12 +255,11 @@ class Snake {
 class Food {
   constructor() {
     this.pos = new helpers.Vec(
-      rand(0, window.innerWidth), // ~~(Math.floor(Math.random().toFixed(1) * cells) * cellSize)
-      rand(0, window.innerHeight) // ~~(Math.floor(Math.random().toFixed(1) * cells) * cellSize)
+      rand(0, window.innerWidth - cellSize * 3), // ~~(Math.floor(Math.random().toFixed(1) * cells) * cellSize)
+      rand(0, window.innerHeight - cellSize * 3) // ~~(Math.floor(Math.random().toFixed(1) * cells) * cellSize)
     );
     this.color = currentHue = `hsl(${~~(Math.random() * 360)},100%,50%)`;
     this.size = cellSize;
-    console.log(rand(0, innerWidth), rand(0, innerHeight))
   }
   draw() {
     let { x, y } = this.pos;
@@ -279,8 +278,8 @@ class Food {
     CTX.shadowBlur = 0;
   }
   spawn() {
-    let randX = rand(0, window.innerWidth); // ~~(Math.floor((Math.random() * cells) * this.size))
-    let randY = rand(0, window.innerHeight); // ~~(Math.floor((Math.random() * cells) * this.size))
+    let randX = rand(0, window.innerWidth - cellSize * 3); // ~~(Math.floor((Math.random() * cells) * this.size))
+    let randY = rand(0, window.innerHeight - cellSize * 3); // ~~(Math.floor((Math.random() * cells) * this.size))
     
     if (randX > W - cellSize) {
       randX = W / 2 - cellSize * 3;
@@ -332,10 +331,10 @@ class Particle {
   }
 }
 
-// function incrementScore() {
-//   score++;
-//   dom_score.innerText = score.toString().padStart(2, "0");
-// }
+function incrementScore() {
+  score++;
+  // dom_score.innerText = score.toString().padStart(2, "0");
+}
 
 function particleSplash() {
   for (let i = 0; i < splashingParticleCount; i++) {

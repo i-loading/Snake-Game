@@ -1,14 +1,22 @@
+// Функция вычисления случайного числа между min и max
 let rand = function (min, max) {
   let k = Math.floor(Math.random() * (max - min) + min);
   return Math.round(k / cellSize) * cellSize;
 };
 
+// Функция вычисления случайного значения. Принимает 3 аргумента: value, min и max
+function clamp(value, min, max){
+  if (value < min) return min;
+  else if (value > max) return max;
+  return value;
+}
+
+// ИНИЦИАЛИЗАЦИЯ ПЕРЕМЕННЫХ (присвоение им значения)
 let dom_canvas = document.querySelector("#canvas");
 let CTX = dom_canvas.getContext("2d");
 
 const W = (dom_canvas.width = window.innerWidth);
 const H = (dom_canvas.height = window.innerHeight);
-
 let snake,
   food,
   currentHue,
@@ -22,7 +30,9 @@ let snake,
   splashingParticleCount = 20,
   cellsCount,
   requestID;
+// ИНИЦИАЛИЗАЦИЯ ПЕРЕМЕННЫХ (присвоение им значения)
 
+// Перемення с Классом внутри, в котором есть функции-помощники
 let helpers = {
   Vec: class {
     constructor(x, y) {
@@ -46,9 +56,11 @@ let helpers = {
       }
     }
   },
+  // Функция для проверки столкновения змейки и яблока
   isCollision(v1, v2) {
     return Math.floor(v1.x) == Math.floor(v2.x) && Math.floor(v1.y) == Math.floor(v2.y);
   },
+  // Функция сборщик мусорных частиц ???
   garbageCollector() {
     for (let i = 0; i < particles.length; i++) {
       if (particles[i].size <= 0) {
@@ -56,10 +68,17 @@ let helpers = {
       }
     }
   },
+  // Функция для отрисовка фона в виде сетки
   drawGrid() {
-    CTX.lineWidth = 1.5;
+    /*
+    
+      Ооооочень криво сделан фон игры. Придумать способ лучше
+
+    */
+    CTX.lineWidth = 2.5;
     CTX.strokeStyle = "#232332";
     CTX.shadowBlur = 0;
+    // Правая нижняя часть
     for (let i = 1; i < cells; i++) {
       let f = (W / cells) * i;
       CTX.beginPath();
@@ -72,22 +91,61 @@ let helpers = {
       CTX.stroke();
       CTX.closePath();
     }
+    // Левая нижняя часть
+    for (let i = 0; i <= cells; i++) {
+      let f = (W / cells) * i;
+      CTX.beginPath();
+      CTX.moveTo(-f, 0);
+      CTX.lineTo(-f, H);
+      CTX.stroke();
+      CTX.beginPath();
+      CTX.moveTo(0, f);
+      CTX.lineTo(-W, f);
+      CTX.stroke();
+      CTX.closePath();
+    }
+    // Левая верхняя часть
+    for (let i = 0; i < cells; i++) {
+      let f = (-W / cells) * i;
+      CTX.beginPath();
+      CTX.moveTo(f, 0);
+      CTX.lineTo(f, -H);
+      CTX.stroke();
+      CTX.beginPath();
+      CTX.moveTo(0, f);
+      CTX.lineTo(-W, f);
+      CTX.stroke();
+      CTX.closePath();
+    }
+    // Правая верхняя
+    for (let i = 0; i < cells; i++) {
+      let f = (-W / cells) * i;
+      CTX.beginPath();
+      CTX.moveTo(-f, 0);
+      CTX.lineTo(-f, -H);
+      CTX.stroke();
+      CTX.beginPath();
+      CTX.moveTo(0, f);
+      CTX.lineTo(W, f);
+      CTX.stroke();
+      CTX.closePath();
+    }
   },
+  // Функция для получания случайного значение Hue
   randHue() {
     return ~~(Math.random() * 360);
   },
+  // Функция конвертер из HSL в RGB
   hsl2rgb(hue, saturation, lightness) {
     if (hue == undefined) {
       return [0, 0, 0];
     }
-    var chroma = (1 - Math.abs(2 * lightness - 1)) * saturation;
-    var huePrime = hue / 60;
-    var secondComponent = chroma * (1 - Math.abs((huePrime % 2) - 1));
+    let chroma = (1 - Math.abs(2 * lightness - 1)) * saturation;
+    let huePrime = hue / 60;
+    let secondComponent = chroma * (1 - Math.abs((huePrime % 2) - 1));
 
     huePrime = ~~huePrime;
-    var red;
-    var green;
-    var blue;
+    let red, green, blue;
 
     if (huePrime === 0) {
       red = chroma;
@@ -115,7 +173,7 @@ let helpers = {
       blue = secondComponent;
     }
 
-    var lightnessAdjustment = lightness - chroma / 2;
+    let lightnessAdjustment = lightness - chroma / 2;
     red += lightnessAdjustment;
     green += lightnessAdjustment;
     blue += lightnessAdjustment;
@@ -126,12 +184,13 @@ let helpers = {
       Math.round(blue * 255),
     ];
   },
+  // ??? - нигде не используется
   lerp(start, end, t) {
     return start * (1 - t) + end * t;
   },
 };
 
-
+// Вспомогательная функция для проверки нажатия стрелок на клавиатуре
 let KEY = {
   ArrowUp: false,
   ArrowRight: false,
@@ -163,9 +222,11 @@ let KEY = {
   },
 };
 
+// Класс для Змейки
 class Snake {
   constructor(i, type) {
-    this.pos = new helpers.Vec(0, 0);
+    // this.pos = new helpers.Vec(cellSize * (cells / 2) - cellSize, cellSize * Math.floor(cells / 4)); // Старые координаты спавна змейки, возможно вернусь к ним
+    this.pos = new helpers.Vec(-(cellSize * (cells / 2) - cellSize) + dom_canvas.width / 2, cellSize);
     this.dir = new helpers.Vec(0, 0);
     this.type = type;
     this.index = i;
@@ -175,6 +236,7 @@ class Snake {
     this.history = [];
     this.total = 1;
   }
+  // Функция отрисовки змейки(первоначальной и последующей)
   draw() {
     let { x, y } = this.pos;
     CTX.fillStyle = this.color;
@@ -191,21 +253,37 @@ class Snake {
       }
     }
   }
+  /*
+    Функция для установки "границ" карты
+
+    UPD: сейчас используется как фукнция которая передвигает канвас в соответствии с позицией змейки; делает карту больше 
+  */
   walls() {
     let { x, y } = this.pos;
-    if (x + cellSize > W) {
-      this.pos.x = 0;
-    }
-    if (y + cellSize > H) {
-      this.pos.y = 0;
-    }
-    if (x < 0) {
-      this.pos.x = W - cellSize;
-    }
-    if (y < 0) {
-      this.pos.y = H - cellSize - (window.innerHeight % cellSize);
-    }
+    
+    // context.setTransform(Горизонтальный масштаб, Горизонтальное скручивание, Вертикальное скручивание, Вертикальный масштаб, Горизонтальный сдвиг, Вертикальный сдвиг);
+    CTX.setTransform(1, 0, 0, 1, 0, 0); // reset the transform matrix as it is cumulative
+    CTX.clearRect(0, 0, dom_canvas.width, dom_canvas.height); // clear the viewport AFTER the matrix is reset
+
+    // Clamp the camera position to the world bounds while centering the camera around the player
+    let camX = clamp(-x + dom_canvas.width / 2, cellSize, window.innerWidth * 2 - dom_canvas.width);
+    let camY = clamp(-y + dom_canvas.height / 2, cellSize, window.innerHeight * 2 - dom_canvas.height);
+    CTX.translate( camX, camY );
+
+    // if (x + cellSize > W) {
+    //   this.pos.x = 0;
+    // }
+    // if (y + cellSize > H) {
+    //   this.pos.y = 0;
+    // }
+    // if (x < 0) {
+    //   this.pos.x = W - cellSize;
+    // }
+    // if (y < 0) {
+    //   this.pos.y = H - cellSize - (window.innerHeight % cellSize);
+    // }
   }
+  // Функция для реагирования на нажатие стрелок и изменения направления змейки
   controlls() {
     let dir = this.size;
     if (KEY.ArrowUp) {
@@ -221,6 +299,11 @@ class Snake {
       this.dir = new helpers.Vec(dir, 0);
     }
   }
+  /*
+    Функция для проверки столкновения с телом змейки
+
+    UPD: работает странно, нужно будет пофиксить
+  */
   selfCollision() {
     for (let i = 0; i < this.history.length; i++) {
       let p = this.history[i];
@@ -229,12 +312,12 @@ class Snake {
       }
     }
   }
+  // Фукнция обновления(как loop)
   update() {
     this.walls();
     this.draw();
     this.controlls();
     if (!this.delay--) {
-      // console.log(this.pos, food.pos);
       if (helpers.isCollision(this.pos, food.pos)) {
         incrementScore();
         particleSplash();
@@ -252,23 +335,33 @@ class Snake {
   }
 }
 
+// Класс для Еды
 class Food {
   constructor() {
     this.pos = new helpers.Vec(
-      rand(0, window.innerWidth - cellSize * 3), // ~~(Math.floor(Math.random().toFixed(1) * cells) * cellSize)
-      rand(0, window.innerHeight - cellSize * 3) // ~~(Math.floor(Math.random().toFixed(1) * cells) * cellSize)
+      // ~~(Math.floor(Math.random().toFixed(1) * cells) * cellSize), ----- V1
+      // ~~(Math.floor(Math.random().toFixed(1) * cells) * cellSize) ----- V1
+      // rand(cellSize * 2, window.innerWidth - cellSize * 3), ----- V2
+      // rand(cellSize * 2, window.innerHeight - cellSize * 3) ----- V2
+      // rand(dom_canvas.width - dom_canvas.width + (cellSize * 3), dom_canvas.width - cellSize * 3), ----- V3
+      // rand(dom_canvas.height - dom_canvas.height + (cellSize * 3), dom_canvas.height - cellSize * 3) ----- V3
+      rand(-window.innerWidth + (cellSize * 3), window.innerWidth + (cellSize * 3)),
+      rand(window.innerHeight + (cellSize * 3), -window.innerHeight + (cellSize * 3))
     );
     this.color = currentHue = `hsl(${~~(Math.random() * 360)},100%,50%)`;
     this.size = cellSize;
   }
+  // Функция для отрисовки первого яблока на случайной точке на карте
   draw() {
     let { x, y } = this.pos;
-    if (x > W - cellSize) {
-      x = W / 2 - cellSize * 3;
-    }
-    if (y > H - cellSize) {
-      y = H / 2 - cellSize * 3;
-    }
+    // console.log("x", x, "y", y);
+    
+    // if (x > W - cellSize) {
+    //   x = W / 2 - cellSize * 3;
+    // }
+    // if (y > H - cellSize) {
+    //   y = H / 2 - cellSize * 3;
+    // }
     CTX.globalCompositeOperation = "lighter";
     CTX.shadowBlur = 20;
     CTX.shadowColor = this.color;
@@ -277,16 +370,20 @@ class Food {
     CTX.globalCompositeOperation = "source-over";
     CTX.shadowBlur = 0;
   }
+  // Функция для отрисовки последующих яблок на случайной точке на карте
   spawn() {
-    let randX = rand(0, window.innerWidth - cellSize * 3); // ~~(Math.floor((Math.random() * cells) * this.size))
-    let randY = rand(0, window.innerHeight - cellSize * 3); // ~~(Math.floor((Math.random() * cells) * this.size))
+    // ~~(Math.floor((Math.random() * cells) * this.size)) ----- V1
+    // rand(cellSize * 2, window.innerWidth - cellSize * 3) ----- V2
+    let randX = rand(-window.innerWidth + (cellSize * 3), window.innerWidth + (cellSize * 3));
+    let randY = rand(window.innerHeight + (cellSize * 3), -window.innerHeight + (cellSize * 3));
+    // console.log("x", randX, "y", randY);
     
-    if (randX > W - cellSize) {
-      randX = W / 2 - cellSize * 3;
-    }
-    if (randY > H - cellSize) {
-      randY = H / 2 - cellSize * 3;
-    }
+    // if (randX > W - cellSize) {
+    //   randX = W / 2 - cellSize * 3;
+    // }
+    // if (randY > H - cellSize) {
+    //   randY = H / 2 - cellSize * 3;
+    // }
     for (let path of snake.history) {
       if (helpers.isCollision(new helpers.Vec(randX, randY), path)) {
         return this.spawn();
@@ -297,6 +394,7 @@ class Food {
   }
 }
 
+// Класс для Частиц
 class Particle {
   constructor(pos, color, size, vel) {
     this.pos = pos;
@@ -306,6 +404,7 @@ class Particle {
     this.gravity = -0.2;
     this.vel = vel;
   }
+  // Функция для отрисовки частиц после того как яблоко было съедено
   draw() {
     let { x, y } = this.pos;
     let hsl = this.color
@@ -322,6 +421,7 @@ class Particle {
     CTX.fillRect(x, y, this.size, this.size);
     CTX.globalCompositeOperation = "source-over";
   }
+  // Фунция для анимации частиц (разлетание в разные стороны)
   update() {
     this.draw();
     this.size -= 0.3;
@@ -331,11 +431,13 @@ class Particle {
   }
 }
 
+// Функция для увеличения счета
 function incrementScore() {
   score++;
   // dom_score.innerText = score.toString().padStart(2, "0");
 }
 
+// Функция для отрисовки анимации частиц
 function particleSplash() {
   for (let i = 0; i < splashingParticleCount; i++) {
     let vel = new helpers.Vec(Math.random() * 6 - 3, Math.random() * 6 - 3);
@@ -344,12 +446,14 @@ function particleSplash() {
   }
 }
 
+// Обнуление канваса ???
 function clear() {
   CTX.clearRect(0, 0, W, H);
 }
 
+// Функция для инициализации главных параметров игры (создание змейки, создание еды, прослушка нажатия стрелок и т.п)
 function initialize() {
-  CTX.imageSmoothingEnabled = false;
+  CTX.imageSmoothingEnabled = false; 
   KEY.listen();
   cellsCount = cells * cells;
   cellSize = W / cells;
@@ -359,12 +463,13 @@ function initialize() {
   loop();
 }
 
+// Функция для создания "цикла" игры
 function loop() {
-  clear();
+  clear(); 
   if (!isGameOver) {
     requestID = setTimeout(loop, 1000 / 60);
-    helpers.drawGrid();
     snake.update();
+    helpers.drawGrid();
     food.draw();
     for (let p of particles) {
       p.update();
@@ -376,6 +481,7 @@ function loop() {
   }
 }
 
+// Функция для проверки окончания игры
 function gameOver() {
   maxScore ? null : (maxScore = score);
   score > maxScore ? (maxScore = score) : null;
@@ -386,9 +492,10 @@ function gameOver() {
   CTX.fillText("GAME OVER", W / 2, H / 2);
   CTX.font = "15px Poppins, sans-serif";
   CTX.fillText(`SCORE   ${score}`, W / 2, H / 2 + 60);
-  CTX.fillText(`MAXSCORE   ${maxScore}`, W / 2, H / 2 + 80);
+  CTX.fillText(`MAX SCORE   ${maxScore}`, W / 2, H / 2 + 80);
 }
 
+// Функция обнуления игры, игрового поля и т.п
 function reset() {
   // dom_score.innerText = "00";
   score = "00";

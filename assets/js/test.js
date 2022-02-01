@@ -1,21 +1,22 @@
-// Функция вычисления случайного числа из 2х значений
+// Функция вычисления случайного числа между min и max
 let rand = function (min, max) {
   let k = Math.floor(Math.random() * (max - min) + min);
   return Math.round(k / cellSize) * cellSize;
 };
 
-// Функция вычисления случайного числа из 3х значений
+// Функция вычисления случайного значения. Принимает 3 аргумента: value, min и max
 function clamp(value, min, max){
   if (value < min) return min;
   else if (value > max) return max;
   return value;
 }
 
+// ИНИЦИАЛИЗАЦИЯ ПЕРЕМЕННЫХ (присвоение им значения)
 let dom_canvas = document.querySelector("#canvas");
 let CTX = dom_canvas.getContext("2d");
+
 const W = (dom_canvas.width = window.innerWidth);
 const H = (dom_canvas.height = window.innerHeight);
-
 let snake,
   food,
   currentHue,
@@ -28,9 +29,10 @@ let snake,
   particles = [],
   splashingParticleCount = 20,
   cellsCount,
-  requestID = undefined;
+  requestID;
+// ИНИЦИАЛИЗАЦИЯ ПЕРЕМЕННЫХ (присвоение им значения)
 
-// Перемення, в которой есть функции-помощники
+// Перемення с Классом внутри, в котором есть функции-помощники
 let helpers = {
   Vec: class {
     constructor(x, y) {
@@ -58,7 +60,7 @@ let helpers = {
   isCollision(v1, v2) {
     return Math.floor(v1.x) == Math.floor(v2.x) && Math.floor(v1.y) == Math.floor(v2.y);
   },
-  // Функция сборщик мусорных частиц
+  // Функция сборщик мусорных частиц ???
   garbageCollector() {
     for (let i = 0; i < particles.length; i++) {
       if (particles[i].size <= 0) {
@@ -220,9 +222,10 @@ let KEY = {
   },
 };
 
-// Класс Змейки
+// Класс для Змейки
 class Snake {
   constructor(i, type) {
+    // this.pos = new helpers.Vec(cellSize * (cells / 2) - cellSize, cellSize * Math.floor(cells / 4)); // Старые координаты спавна змейки, возможно вернусь к ним
     this.pos = new helpers.Vec(-(cellSize * (cells / 2) - cellSize) + dom_canvas.width / 2, cellSize);
     this.dir = new helpers.Vec(0, 0);
     this.type = type;
@@ -332,39 +335,77 @@ class Snake {
   }
 }
 
-// Класс Еды
+// Класс для Еды
 class Food {
   constructor() {
     this.pos = new helpers.Vec(
+      // ~~(Math.floor(Math.random().toFixed(1) * cells) * cellSize), ----- V1
+      // ~~(Math.floor(Math.random().toFixed(1) * cells) * cellSize) ----- V1
+      // rand(cellSize * 2, window.innerWidth - cellSize * 3), ----- V2
+      // rand(cellSize * 2, window.innerHeight - cellSize * 3) ----- V2
+      // rand(dom_canvas.width - dom_canvas.width + (cellSize * 3), dom_canvas.width - cellSize * 3), ----- V3
+      // rand(dom_canvas.height - dom_canvas.height + (cellSize * 3), dom_canvas.height - cellSize * 3) ----- V3
       rand(-window.innerWidth + (cellSize * 3), window.innerWidth - (cellSize * 3)),
       rand(window.innerHeight + (cellSize * 3), -window.innerHeight + (cellSize * 3))
     );
     this.color = currentHue = `hsl(${~~(Math.random() * 360)},100%,50%)`;
     this.size = cellSize;
   }
+  // drawMultipuleStart() {
+  //   let { x, y } = this.pos;
+  //   for (let i = 0; i < 100; i++) {
+  //     x = rand(-window.innerWidth + (cellSize * 3), window.innerWidth - (cellSize * 3));
+  //     y = rand(window.innerHeight + (cellSize * 3), -window.innerHeight + (cellSize * 3));
+
+  //     CTX.globalCompositeOperation = "lighter";
+  //     CTX.shadowBlur = 20;
+  //     CTX.shadowColor = this.color;
+  //     CTX.fillStyle = this.color;
+  //     CTX.fillRect(x, y, this.size, this.size);
+  //     CTX.globalCompositeOperation = "source-over";
+  //     CTX.shadowBlur = 0; 
+  //     console.log("x", x, "y", y);
+  //   }
+  // }
   // Функция для отрисовки первого яблока на случайной точке на карте
   draw() {
     let { x, y } = this.pos;
+    // console.log("x", x, "y", y);
     
+    // if (x > W - cellSize) {
+    //   x = W / 2 - cellSize * 3;
+    // }
+    // if (y > H - cellSize) {
+    //   y = H / 2 - cellSize * 3;
+    // }
     for (let i = 0; i < 40; i++) {
       x = rand(-window.innerWidth + (cellSize * 3), window.innerWidth - (cellSize * 3));
       y = rand(window.innerHeight + (cellSize * 3), -window.innerHeight + (cellSize * 3));
-      
+
       CTX.globalCompositeOperation = "lighter";
       CTX.shadowBlur = 20;
       CTX.shadowColor = this.color;
       CTX.fillStyle = this.color;
       CTX.fillRect(x, y, this.size, this.size);
       CTX.globalCompositeOperation = "source-over";
-      CTX.shadowBlur = 0;
-      this.color = currentHue = `hsl(${helpers.randHue()}, 100%, 50%)`;
+      CTX.shadowBlur = 0; 
     }
   }
   // Функция для отрисовки последующих яблок на случайной точке на карте
   spawn() {
+    // ~~(Math.floor((Math.random() * cells) * this.size)) ----- V1
+    // rand(cellSize * 2, window.innerWidth - cellSize * 3) ----- V2
     let randX = rand(-window.innerWidth + (cellSize * 3), window.innerWidth - (cellSize * 3));
     let randY = rand(window.innerHeight + (cellSize * 3), -window.innerHeight + (cellSize * 3));
+
+    // console.log("x", randX, "y", randY);
     
+    // if (randX > W - cellSize) {
+    //   randX = W / 2 - cellSize * 3;
+    // }
+    // if (randY > H - cellSize) {
+    //   randY = H / 2 - cellSize * 3;
+    // }
     for (let path of snake.history) {
       if (helpers.isCollision(new helpers.Vec(randX, randY), path)) {
         return this.spawn();
@@ -372,6 +413,9 @@ class Food {
     }
     this.color = currentHue = `hsl(${helpers.randHue()}, 100%, 50%)`;
     this.pos = new helpers.Vec(randX, randY);
+  }
+  moveMap() {
+
   }
 }
 
@@ -441,7 +485,6 @@ function initialize() {
   snake = new Snake();
   food = new Food();
   // dom_replay.addEventListener("click", reset, false);
-  
   loop();
 }
 
@@ -449,16 +492,7 @@ function initialize() {
 function loop() {
   clear();
   if (!isGameOver) {
-    // requestID = setTimeout(loop, 1000 / 60);
-    // if (typeof requestID !== undefined) {
-    //   requestID = window.requestAnimationFrame(loop);
-    // }
-    
-    // if(food.draw()) {
-    //   window.cancelAnimationFrame(requestID);
-    //   requestID = undefined;
-    // }
-    
+    requestID = setTimeout(loop, 1000 / 60);
     snake.update();
     helpers.drawGrid();
     food.draw();
@@ -466,7 +500,7 @@ function loop() {
       p.update();
     }
     helpers.garbageCollector();
-    // clearTimeout(requestID);
+    clearTimeout(requestID);
   } else {
     clear();
     gameOver();
@@ -499,4 +533,4 @@ function reset() {
   loop();
 }
 
-initialize()
+initialize();

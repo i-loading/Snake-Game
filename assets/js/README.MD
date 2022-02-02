@@ -90,3 +90,25 @@
       this.history = [];
       this.total = 1;
     }
+
+--------- Старая функция окончания игры ---------
+  function gameOver() {
+    maxScore ? null : (maxScore = score);
+    score > maxScore ? (maxScore = score) : null;
+    window.localStorage.setItem("maxScore", maxScore);
+    // CTX.fillStyle = "#4cffd7";
+    // CTX.textAlign = "center";
+    // CTX.font = "bold 30px Poppins, sans-serif";
+    // CTX.fillText("GAME OVER", W / 2, H / 2);
+    // CTX.font = "15px Poppins, sans-serif";
+    // CTX.fillText(`SCORE   ${score}`, W / 2, H / 2 + 60);
+    // CTX.fillText(`MAX SCORE   ${maxScore}`, W / 2, H / 2 + 80);
+    const divOver = document.querySelector(".game-over");
+    divOver.innerHTML = `
+      <h1>GAME OVER</h1>
+      <h4>SCORE - ${score}</h4>
+      <h4>MAX SCORE - ${maxScore}</h4>
+      <button id="reset-game" onclick="location.reload(); return false;">Restart The Game</button>
+    `;
+    divOver.style.display = "flex";
+  }

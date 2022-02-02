@@ -16,6 +16,9 @@ let CTX = dom_canvas.getContext("2d");
 const W = (dom_canvas.width = window.innerWidth);
 const H = (dom_canvas.height = window.innerHeight);
 
+let dom_score = document.querySelector(".current-score");
+dom_score.innerHTML = `<p>Score</p><h4>00</h4>`;
+
 let snake,
   food,
   currentHue,
@@ -23,7 +26,7 @@ let snake,
   cellSize,
   isGameOver = false,
   tails = [],
-  score = 00,
+  score = 01,
   maxScore = window.localStorage.getItem("maxScore") || undefined,
   particles = [],
   splashingParticleCount = 20,
@@ -129,6 +132,12 @@ let helpers = {
       CTX.closePath();
     }
   },
+  // Функция для отрисовки мини карты
+  // drawMiniMap(){
+  //   html2canvas(document.getElementById("canvas")).then(canvas => {
+  //     document.getElementById("miniMap").appendChild(canvas);
+  //   });
+  // },
   // Функция для получания случайного значение Hue
   randHue() {
     return ~~(Math.random() * 360);
@@ -267,18 +276,24 @@ class Snake {
     let camY = clamp(-y + dom_canvas.height / 2, cellSize, window.innerHeight * 2 - dom_canvas.height);
     CTX.translate( camX, camY );
 
-    // if (x + cellSize > W) {
-    //   this.pos.x = 0;
-    // }
-    // if (y + cellSize > H) {
-    //   this.pos.y = 0;
-    // }
-    // if (x < 0) {
-    //   this.pos.x = W - cellSize;
-    // }
-    // if (y < 0) {
-    //   this.pos.y = H - cellSize - (window.innerHeight % cellSize);
-    // }
+    // Границы карты
+    let flagOpt = false;
+    if (x < -window.innerWidth - cellSize) {
+      gameOver();
+      flagOpt = true;
+    }
+    if (x > window.innerWidth - cellSize) {
+      gameOver();
+      flagOpt = true;
+    }
+    if (y > window.innerHeight - cellSize && !flagOpt) {
+      gameOver();
+      flagOpt = true;
+    }
+    if (y < -window.innerHeight && !flagOpt) {
+      gameOver();
+      flagOpt = true;
+    }
   }
   // Функция для реагирования на нажатие стрелок и изменения направления змейки
   controlls() {
@@ -337,7 +352,7 @@ class Food {
   constructor() {
     this.pos = new helpers.Vec(
       rand(-window.innerWidth + (cellSize * 3), window.innerWidth - (cellSize * 3)),
-      rand(window.innerHeight + (cellSize * 3), -window.innerHeight + (cellSize * 3))
+      rand(window.innerHeight - (cellSize * 3), -window.innerHeight + (cellSize * 3))
     );
     this.color = currentHue = `hsl(${~~(Math.random() * 360)},100%,50%)`;
     this.size = cellSize;
@@ -346,9 +361,9 @@ class Food {
   draw() {
     let { x, y } = this.pos;
     
-    for (let i = 0; i < 40; i++) {
-      x = rand(-window.innerWidth + (cellSize * 3), window.innerWidth - (cellSize * 3));
-      y = rand(window.innerHeight + (cellSize * 3), -window.innerHeight + (cellSize * 3));
+    // for (let i = 0; i < 40; i++) {
+    //   x = rand(-window.innerWidth + (cellSize * 3), window.innerWidth - (cellSize * 3));
+    //   y = rand(window.innerHeight + (cellSize * 3), -window.innerHeight + (cellSize * 3));
       
       CTX.globalCompositeOperation = "lighter";
       CTX.shadowBlur = 20;
@@ -357,13 +372,13 @@ class Food {
       CTX.fillRect(x, y, this.size, this.size);
       CTX.globalCompositeOperation = "source-over";
       CTX.shadowBlur = 0;
-      this.color = currentHue = `hsl(${helpers.randHue()}, 100%, 50%)`;
-    }
+      // this.color = currentHue = `hsl(${helpers.randHue()}, 100%, 50%)`;
+    // }
   }
   // Функция для отрисовки последующих яблок на случайной точке на карте
   spawn() {
     let randX = rand(-window.innerWidth + (cellSize * 3), window.innerWidth - (cellSize * 3));
-    let randY = rand(window.innerHeight + (cellSize * 3), -window.innerHeight + (cellSize * 3));
+    let randY = rand(window.innerHeight - (cellSize * 3), -window.innerHeight + (cellSize * 3));
     
     for (let path of snake.history) {
       if (helpers.isCollision(new helpers.Vec(randX, randY), path)) {
@@ -375,7 +390,7 @@ class Food {
   }
 }
 
-// Класс для Частиц
+// Класс Частиц
 class Particle {
   constructor(pos, color, size, vel) {
     this.pos = pos;
@@ -414,8 +429,8 @@ class Particle {
 
 // Функция для увеличения счета
 function incrementScore() {
+  dom_score.innerHTML = `<p>Score</p><h4>${score.toString().padStart(2, "0")}</h4>`;
   score++;
-  // dom_score.innerText = score.toString().padStart(2, "0");
 }
 
 // Функция для отрисовки анимации частиц
@@ -449,7 +464,7 @@ function initialize() {
 function loop() {
   clear();
   if (!isGameOver) {
-    // requestID = setTimeout(loop, 1000 / 60);
+    requestID = setTimeout(loop, 1000 / 60);
     // if (typeof requestID !== undefined) {
     //   requestID = window.requestAnimationFrame(loop);
     // }
@@ -466,6 +481,7 @@ function loop() {
       p.update();
     }
     helpers.garbageCollector();
+    // helpers.drawMiniMap();
     // clearTimeout(requestID);
   } else {
     clear();
@@ -478,18 +494,24 @@ function gameOver() {
   maxScore ? null : (maxScore = score);
   score > maxScore ? (maxScore = score) : null;
   window.localStorage.setItem("maxScore", maxScore);
-  CTX.fillStyle = "#4cffd7";
-  CTX.textAlign = "center";
-  CTX.font = "bold 30px Poppins, sans-serif";
-  CTX.fillText("GAME OVER", W / 2, H / 2);
-  CTX.font = "15px Poppins, sans-serif";
-  CTX.fillText(`SCORE   ${score}`, W / 2, H / 2 + 60);
-  CTX.fillText(`MAX SCORE   ${maxScore}`, W / 2, H / 2 + 80);
+
+  const divOver = document.querySelector(".game-over");
+  const scoreTitle = document.querySelector(".score-title");
+  const maxScoreTitle = document.querySelector(".max_score-title");
+  const resetBtn = document.querySelector("#reset-game");
+  scoreTitle.innerText = `SCORE - ${score}`;
+  maxScoreTitle.innerText = `MAX SCORE - ${maxScore}`;
+  divOver.style.display = "flex";
+
+  resetBtn.onclick = function () { 
+    window.location.reload();
+    return false;
+  }
 }
 
 // Функция обнуления игры, игрового поля и т.п
 function reset() {
-  // dom_score.innerText = "00";
+  dom_score.innerText = "00";
   score = "00";
   snake = new Snake();
   food.spawn();
@@ -499,4 +521,4 @@ function reset() {
   loop();
 }
 
-initialize()
+initialize();

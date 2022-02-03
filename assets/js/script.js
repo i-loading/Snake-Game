@@ -1,10 +1,10 @@
-// Функция вычисления случайного числа из 2х значений
+// Функция для вычисления случайного числа из 2х значений
 let rand = function (min, max) {
   let k = Math.floor(Math.random() * (max - min) + min);
   return Math.round(k / cellSize) * cellSize;
 };
 
-// Функция вычисления случайного числа из 3х значений
+// Функция для вычисления случайного числа из 3х значений
 function clamp(value, min, max){
   if (value < min) return min;
   else if (value > max) return max;
@@ -26,7 +26,7 @@ let snake,
   cellSize,
   isGameOver = false,
   tails = [],
-  score = 01,
+  score = 00,
   maxScore = window.localStorage.getItem("maxScore") || undefined,
   particles = [],
   splashingParticleCount = 20,
@@ -71,11 +71,7 @@ let helpers = {
   },
   // Функция для отрисовка фона в виде сетки
   drawGrid() {
-    /*
-    
-      Ооооочень криво сделан фон игры. Придумать способ лучше
-
-    */
+    /* Ооооочень криво сделан фон игры. Придумать способ лучше */
     CTX.lineWidth = 1.5;
     CTX.strokeStyle = "#232332";
     CTX.shadowBlur = 0;
@@ -351,8 +347,8 @@ class Snake {
 class Food {
   constructor() {
     this.pos = new helpers.Vec(
-      rand(-window.innerWidth + (cellSize * 3), window.innerWidth - (cellSize * 3)),
-      rand(window.innerHeight - (cellSize * 3), -window.innerHeight + (cellSize * 3))
+      rand(-window.innerWidth + (cellSize * 3), window.innerWidth - (cellSize * 6)),
+      rand(-window.innerHeight + (cellSize * 3), window.innerHeight - (cellSize * 6))
     );
     this.color = currentHue = `hsl(${~~(Math.random() * 360)},100%,50%)`;
     this.size = cellSize;
@@ -360,10 +356,9 @@ class Food {
   // Функция для отрисовки первого яблока на случайной точке на карте
   draw() {
     let { x, y } = this.pos;
-    
     // for (let i = 0; i < 40; i++) {
-    //   x = rand(-window.innerWidth + (cellSize * 3), window.innerWidth - (cellSize * 3));
-    //   y = rand(window.innerHeight + (cellSize * 3), -window.innerHeight + (cellSize * 3));
+    //   x = rand(-window.innerWidth + (cellSize * 3), window.innerWidth - (cellSize * 6));
+    //   y = rand(-window.innerHeight + (cellSize * 3), window.innerHeight - (cellSize * 6));
       
       CTX.globalCompositeOperation = "lighter";
       CTX.shadowBlur = 20;
@@ -377,8 +372,8 @@ class Food {
   }
   // Функция для отрисовки последующих яблок на случайной точке на карте
   spawn() {
-    let randX = rand(-window.innerWidth + (cellSize * 3), window.innerWidth - (cellSize * 3));
-    let randY = rand(window.innerHeight - (cellSize * 3), -window.innerHeight + (cellSize * 3));
+    let randX = rand(-window.innerWidth + (cellSize * 3), window.innerWidth - (cellSize * 6));
+    let randY = rand(-window.innerHeight + (cellSize * 3), window.innerHeight - (cellSize * 6));
     
     for (let path of snake.history) {
       if (helpers.isCollision(new helpers.Vec(randX, randY), path)) {
@@ -429,8 +424,8 @@ class Particle {
 
 // Функция для увеличения счета
 function incrementScore() {
-  dom_score.innerHTML = `<p>Score</p><h4>${score.toString().padStart(2, "0")}</h4>`;
   score++;
+  dom_score.innerHTML = `<p>Score</p><h4>${score.toString().padStart(2, "0")}</h4>`;
 }
 
 // Функция для отрисовки анимации частиц
@@ -442,7 +437,7 @@ function particleSplash() {
   }
 }
 
-// Обнуление канваса ???
+// Обнуление канваса
 function clear() {
   CTX.clearRect(0, 0, W, H);
 }
@@ -522,3 +517,4 @@ function reset() {
 }
 
 initialize();
+

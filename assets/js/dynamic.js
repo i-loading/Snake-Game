@@ -17,6 +17,7 @@ let food_canvas = document.querySelector("#canvasFood");
 let CTX2 = food_canvas.getContext("2d");
 const W = (dom_canvas.width = food_canvas.width = window.innerWidth);
 const H = (dom_canvas.height = food_canvas.height = window.innerHeight);
+
 let dom_score = document.querySelector(".current-score");
 dom_score.innerHTML = `<p>Score</p><h4>00</h4>`;
 
@@ -28,11 +29,13 @@ let snake,
   isGameOver = false,
   tails = [],
   score = 00,
-  maxScore = window.localStorage.getItem("maxScore") || undefined,
+  maxScoreDynamic = window.localStorage.getItem("maxScoreDynamic") || undefined,
   particles = [],
   splashingParticleCount = 20,
   cellsCount,
-  requestID = undefined;
+  requestID = undefined,
+  appleCount = 20,
+  globalCoord = [];
 
 // Перемення, в которой есть функции-помощники
 let helpers = {
@@ -65,62 +68,19 @@ let helpers = {
   // Функция сборщик мусорных частиц
   garbageCollector() {
     for (let i = 0; i < particles.length; i++) {
-      if (particles[i].size <= 0) {
-        particles.splice(i, 1);
-      }
+      if (particles[i].size <= 0) particles.splice(i, 1);
     }
   },
   // Функция для отрисовка фона в виде сетки
   drawGrid() {
-    /* Ооооочень криво сделан фон игры. Придумать способ лучше */
     CTX.lineWidth = 1.5;
     CTX.strokeStyle = "#232332";
     CTX.shadowBlur = 0;
-    // Правая нижняя часть
     for (let i = 1; i < cells; i++) {
       let f = (W / cells) * i;
       CTX.beginPath();
       CTX.moveTo(f, 0);
       CTX.lineTo(f, H);
-      CTX.stroke();
-      CTX.beginPath();
-      CTX.moveTo(0, f);
-      CTX.lineTo(W, f);
-      CTX.stroke();
-      CTX.closePath();
-    }
-    // Левая нижняя часть
-    for (let i = 0; i <= cells; i++) {
-      let f = (W / cells) * i;
-      CTX.beginPath();
-      CTX.moveTo(-f, 0);
-      CTX.lineTo(-f, H);
-      CTX.stroke();
-      CTX.beginPath();
-      CTX.moveTo(0, f);
-      CTX.lineTo(-W, f);
-      CTX.stroke();
-      CTX.closePath();
-    }
-    // Левая верхняя часть
-    for (let i = 0; i < cells; i++) {
-      let f = (-W / cells) * i;
-      CTX.beginPath();
-      CTX.moveTo(f, 0);
-      CTX.lineTo(f, -H);
-      CTX.stroke();
-      CTX.beginPath();
-      CTX.moveTo(0, f);
-      CTX.lineTo(-W, f);
-      CTX.stroke();
-      CTX.closePath();
-    }
-    // Правая верхняя
-    for (let i = 0; i < cells; i++) {
-      let f = (-W / cells) * i;
-      CTX.beginPath();
-      CTX.moveTo(-f, 0);
-      CTX.lineTo(-f, -H);
       CTX.stroke();
       CTX.beginPath();
       CTX.moveTo(0, f);
@@ -135,9 +95,8 @@ let helpers = {
   },
   // Функция конвертер из HSL в RGB
   hsl2rgb(hue, saturation, lightness) {
-    if (hue == undefined) {
-      return [0, 0, 0];
-    }
+    if (hue == undefined) return [0, 0, 0];
+    
     let chroma = (1 - Math.abs(2 * lightness - 1)) * saturation;
     let huePrime = hue / 60;
     let secondComponent = chroma * (1 - Math.abs((huePrime % 2) - 1));
@@ -254,40 +213,16 @@ class Snake {
   walls() {
     let { x, y } = this.pos;
 
-    // Границы карты
-    let flagOpt = false;
-    if (x < 0 - cellSize && !flagOpt) {
-      gameOver();
-      flagOpt = true;
-    }
-    if (x > window.innerWidth && !flagOpt) {
-      gameOver();
-      flagOpt = true;
-    }
-    if (y > window.innerHeight && !flagOpt) {
-      gameOver();
-      flagOpt = true;
-    }
-    if (y < 0 - cellSize && !flagOpt) {
-      gameOver();
-      flagOpt = true;
-    }
+    // Границы карты (Левая || Правая || Нижняя || Верхняя)
+    if (x < 0 - cellSize || x > window.innerWidth || y > window.innerHeight || y < 0 - cellSize) gameOver();
   }
   // Функция для реагирования на нажатие стрелок и изменения направления змейки
   controlls() {
     let dir = this.size;
-    if (KEY.ArrowUp) {
-      this.dir = new helpers.Vec(0, -dir);
-    }
-    if (KEY.ArrowDown) {
-      this.dir = new helpers.Vec(0, dir);
-    }
-    if (KEY.ArrowLeft) {
-      this.dir = new helpers.Vec(-dir, 0);
-    }
-    if (KEY.ArrowRight) {
-      this.dir = new helpers.Vec(dir, 0);
-    }
+    if (KEY.ArrowUp) this.dir = new helpers.Vec(0, -dir);
+    if (KEY.ArrowDown) this.dir = new helpers.Vec(0, dir);
+    if (KEY.ArrowLeft) this.dir = new helpers.Vec(-dir, 0);
+    if (KEY.ArrowRight) this.dir = new helpers.Vec(dir, 0);
   }
   /*
     Функция для проверки столкновения с телом змейки
@@ -308,12 +243,13 @@ class Snake {
     this.draw();
     this.controlls();
     if (!this.delay--) {
-      // console.log("this.pos", this.pos,"food.pos", food.pos);
-      if (helpers.isCollision(this.pos, food.pos)) {
-        incrementScore();
-        particleSplash();
-        food.draw();
-        this.total++;
+      for (let i = 0; i < appleCount; i++) {
+        if (helpers.isCollision(this.pos, globalCoord[i])) {
+          incrementScore();
+          particleSplash();
+          food.spawn();
+          this.total++;
+        }
       }
       this.history[this.total - 1] = new helpers.Vec(this.pos.x, this.pos.y);
       for (let i = 0; i < this.total - 1; i++) {
@@ -337,12 +273,14 @@ class Food {
     this.size = cellSize;
   }
   // Функция для отрисовки первого яблока на случайной точке на карте
-  draw(count) {
+  draw() {
     let { x, y } = this.pos;
-    for (let i = 1; i <= count; i++) {
+    for (let i = 0; i < appleCount; i++) {
       x = rand(cellSize * 2, dom_canvas.width - cellSize * 2);
       y = rand(cellSize * 2, dom_canvas.height - cellSize * 2);
-      
+
+      globalCoord.push({ x: x, y: y });
+
       CTX2.globalCompositeOperation = "lighter";
       CTX2.shadowBlur = 20;
       CTX2.shadowColor = this.color;
@@ -355,15 +293,17 @@ class Food {
   }
   // Функция для отрисовки последующих яблок на случайной точке на карте
   spawn() {
-    // let randX = rand(cellSize * 2, food_canvas.width - cellSize * 2);
-    // let randY = rand(cellSize * 2, food_canvas.height - cellSize * 2);
-    // for (let path of snake.history) {
-    //   if (helpers.isCollision(new helpers.Vec(randX, randY), path)) {
-    //     return this.spawn();
-    //   }
-    // }
-    // this.color = currentHue = `hsl(${helpers.randHue()}, 100%, 50%)`;
-    // this.pos = new helpers.Vec(randX, randY);
+    let randX = rand(cellSize * 2, food_canvas.width - cellSize * 2);
+    let randY = rand(cellSize * 2, food_canvas.height - cellSize * 2);
+    globalCoord.push({ x: randX, y: randY });
+
+    for (let path of snake.history) {
+      if (helpers.isCollision(new helpers.Vec(randX, randY), path)) {
+        return this.spawn();
+      }
+    }
+    this.color = currentHue = `hsl(${helpers.randHue()}, 100%, 50%)`;
+    this.pos = new helpers.Vec(randX, randY);
   }
 }
 
@@ -433,7 +373,7 @@ function initialize() {
   snake = new Snake();
   food = new Food();
 
-  food.draw(20);
+  food.draw();
   loop();
 }
 
@@ -442,13 +382,8 @@ function loop() {
   clear();
   if (!isGameOver) {
     // requestID = setTimeout(loop, 1000 / 60);
-    if (typeof requestID !== undefined) {
-      requestID = window.requestAnimationFrame(loop);
-    }
-    // if(food.draw()) {
-    //   window.cancelAnimationFrame(requestID);
-    //   requestID = undefined;
-    // }
+    requestID = window.requestAnimationFrame(loop);
+    // window.cancelAnimationFrame(requestID);
 
     snake.update();
     helpers.drawGrid();
@@ -456,7 +391,6 @@ function loop() {
       p.update();
     }
     helpers.garbageCollector();
-    // clearTimeout(requestID);
   } else {
     clear();
     gameOver();
@@ -465,16 +399,16 @@ function loop() {
 
 // Функция для проверки окончания игры
 function gameOver() {
-  maxScore ? null : (maxScore = score);
-  score > maxScore ? (maxScore = score) : null;
-  window.localStorage.setItem("maxScore", maxScore);
+  maxScoreDynamic ? null : (maxScoreDynamic = score);
+  score > maxScoreDynamic ? (maxScoreDynamic = score) : null;
+  window.localStorage.setItem("maxScoreDynamic", maxScoreDynamic);
 
   const divOver = document.querySelector(".game-over");
   const scoreTitle = document.querySelector(".score-title");
   const maxScoreTitle = document.querySelector(".max_score-title");
   const resetBtn = document.querySelector("#reset-game");
   scoreTitle.innerText = `SCORE - ${score}`;
-  maxScoreTitle.innerText = `MAX SCORE - ${maxScore}`;
+  maxScoreTitle.innerText = `MAX SCORE - ${maxScoreDynamic}`;
   divOver.style.display = "flex";
 
   resetBtn.onclick = function () { 

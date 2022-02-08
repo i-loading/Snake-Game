@@ -29,9 +29,8 @@ a:hover{text-decoration: none;}
 ul{list-style: none;}
 img{vertical-align: top;}
 h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight: 400;}
-a {
-  display: block;
-}
+a {display: block;}
+
 body {
   background-color: #161521;
   position: relative;
@@ -56,14 +55,15 @@ h1 {
   font-size: 100px;
   font-weight: bold;
   color: #fff;
+  text-shadow: 0px 0px 5px #fff;
 }
-
 @supports (-webkit-text-stroke: 1px white) {
   h1 {
     color: transparent;
     -webkit-text-stroke: 1px white;
   }
 }
+
 
 main {
   width: 100vw;
@@ -86,6 +86,7 @@ main > * > * > img {
   box-shadow: 0px 0px 50px 15px #1c1c2c;
 }
 
+
 .long_wrapper {
   top: 50%;
   left: 50%;
@@ -99,33 +100,33 @@ main > * > * > img {
   transform: translate(110%, -50%);
   transition: all 0.5s ease-in-out;
 }
-
-.main_btn {
+.main_title {
   margin-top: 40px;
   font-size: 80px;
   font-weight: bold;
   color: #fff;
   transition: all 0.5s ease-in-out;
+  text-shadow: 0px 0px 10px #fff;
 }
+
 
 .long_link:hover .long_wrapper{
   transform: scale(1.05) translate(-115%, -48%);
 }
-@supports (-webkit-text-stroke: 1px white) {
-  .long_link:hover .long_wrapper h3 {
-    color: transparent;
-    -webkit-text-stroke: 1px white;
-    transform: scale(1.2);
-  }
-}
-
 .dynamic_link:hover .dynamic_wrapper{
   transform: scale(1.05) translate(115%, -48%);
 }
+
 @supports (-webkit-text-stroke: 1px white) {
-  .dynamic_link:hover .dynamic_wrapper h3 {
+  .long_link .long_wrapper h3,
+  .dynamic_link .dynamic_wrapper h3 {
     color: transparent;
     -webkit-text-stroke: 1px white;
-    transform: scale(1.2);
   }
+}
+
+.long_link:hover .long_wrapper h3,
+.dynamic_link:hover .dynamic_wrapper h3 {
+  transform: scale(1.2);
+  color: #fff;
 }

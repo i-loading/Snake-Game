@@ -27,7 +27,7 @@ let snake,
   isGameOver = false,
   tails = [],
   score = 00,
-  maxScore = window.localStorage.getItem("maxScore") || undefined,
+  maxScoreLong = window.localStorage.getItem("maxScoreLong") || undefined,
   particles = [],
   splashingParticleCount = 20,
   cellsCount,
@@ -484,16 +484,16 @@ function loop() {
 
 // Функция для проверки окончания игры
 function gameOver() {
-  maxScore ? null : (maxScore = score);
-  score > maxScore ? (maxScore = score) : null;
-  window.localStorage.setItem("maxScore", maxScore);
+  maxScoreLong ? null : (maxScoreLong = score);
+  score > maxScoreLong ? (maxScoreLong = score) : null;
+  window.localStorage.setItem("maxScoreLong", maxScoreLong);
 
   const divOver = document.querySelector(".game-over");
   const scoreTitle = document.querySelector(".score-title");
   const maxScoreTitle = document.querySelector(".max_score-title");
   const resetBtn = document.querySelector("#reset-game");
   scoreTitle.innerText = `SCORE - ${score}`;
-  maxScoreTitle.innerText = `MAX SCORE - ${maxScore}`;
+  maxScoreTitle.innerText = `MAX SCORE - ${maxScoreLong}`;
   divOver.style.display = "flex";
 
   resetBtn.onclick = function () { 

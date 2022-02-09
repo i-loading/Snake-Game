@@ -34,7 +34,7 @@ let snake,
   splashingParticleCount = 20,
   cellsCount,
   requestID = undefined,
-  appleCount = 15,
+  appleCount = 35,
   globalCoord = [];
 
 // Перемення, в которой есть функции-помощники
@@ -244,8 +244,7 @@ class Snake {
     if (!this.delay--) {
       for (let i = 0; i < appleCount; i++) {
         if (helpers.isCollision(this.pos, globalCoord[i])) {
-          // CTX2.clearRect(globalCoord[i].x - 20, globalCoord[i].y - 20, cellSize + cellSize + cellSize, cellSize + cellSize + cellSize);
-          // CTX2.clearRect(globalCoord[i].x, globalCoord[i].y, cellSize, cellSize);
+          CTX2.clearRect(globalCoord[i].x - 2.5, globalCoord[i].y - 2.5, cellSize + 5, cellSize + 5);
           
           incrementScore();
           particleSplash(globalCoord[i].x, globalCoord[i].y, globalCoord[i].color);
@@ -268,8 +267,8 @@ class Snake {
 class Food {
   constructor() {
     this.pos = new helpers.Vec(
-      rand(cellSize * 2, dom_canvas.width - cellSize * 2),
-      rand(cellSize * 2, dom_canvas.height - cellSize * 2)
+      rand(cellSize * 2, dom_canvas.width - cellSize * 3),
+      rand(cellSize * 2, dom_canvas.height - cellSize * 3)
     );
     this.color = currentHue = `hsl(${~~(Math.random() * 360)},100%,50%)`;
     this.size = cellSize;
@@ -278,16 +277,16 @@ class Food {
   draw() {
     let { x, y } = this.pos;
     for (let i = 0; i < appleCount; i++) {
-      x = rand(cellSize * 2, dom_canvas.width - cellSize * 2);
-      y = rand(cellSize * 2, dom_canvas.height - cellSize * 2);
+      x = rand(cellSize * 2, dom_canvas.width - cellSize * 3);
+      y = rand(cellSize * 2, dom_canvas.height - cellSize * 3);
 
       globalCoord.push({ x: x, y: y, color: this.color });
 
       CTX2.globalCompositeOperation = "lighter";
-      CTX2.shadowBlur = 20;
+      CTX2.shadowBlur = 10;
       CTX2.shadowColor = this.color;
       CTX2.fillStyle = this.color;
-      CTX2.fillRect(x, y, this.size, this.size);
+      CTX2.fillRect(x + 5, y + 5, this.size - 10, this.size - 10);
       CTX2.globalCompositeOperation = "source-over";
       CTX2.shadowBlur = 0;
       this.color = currentHue = `hsl(${helpers.randHue()}, 100%, 50%)`;
@@ -295,28 +294,17 @@ class Food {
   }
   // Функция для отрисовки последующих яблок на случайной точке на карте
   spawn() {
-    // let randX = rand(cellSize * 2, food_canvas.width - cellSize * 2);
-    // let randY = rand(cellSize * 2, food_canvas.height - cellSize * 2);
-    // globalCoord.push({ x: randX, y: randY });
-
-    // for (let path of snake.history) {
-    //   if (helpers.isCollision(new helpers.Vec(randX, randY), path)) {
-    //     return this.spawn();
-    //   }
-    // }
-    // this.color = currentHue = `hsl(${helpers.randHue()}, 100%, 50%)`;
-    // this.pos = new helpers.Vec(randX, randY);
-    let x = rand(cellSize * 2, dom_canvas.width - cellSize * 2);
-    let y = rand(cellSize * 2, dom_canvas.height - cellSize * 2);
+    let x = rand(cellSize * 2, dom_canvas.width - cellSize * 3);
+    let y = rand(cellSize * 2, dom_canvas.height - cellSize * 3);
 
     globalCoord.push({ x: x, y: y, color: this.color });
     appleCount++;
 
     CTX2.globalCompositeOperation = "lighter";
-    CTX2.shadowBlur = 20;
+    CTX2.shadowBlur = 10;
     CTX2.shadowColor = this.color;
     CTX2.fillStyle = this.color;
-    CTX2.fillRect(x, y, this.size, this.size);
+    CTX2.fillRect(x + 5, y + 5, this.size - 10, this.size - 10);
     CTX2.globalCompositeOperation = "source-over";
     CTX2.shadowBlur = 0;
     this.color = currentHue = `hsl(${helpers.randHue()}, 100%, 50%)`;

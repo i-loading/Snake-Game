@@ -34,7 +34,7 @@ let snake,
   splashingParticleCount = 20,
   cellsCount,
   requestID = undefined,
-  appleCount = 20,
+  appleCount = 15,
   globalCoord = [];
 
 // Перемення, в которой есть функции-помощники
@@ -182,7 +182,7 @@ let KEY = {
 // Класс Змейки
 class Snake {
   constructor(i, type) {
-    this.pos = new helpers.Vec(cellSize, cellSize);
+    this.pos = new helpers.Vec(cellSize * (cells / 2) - cellSize, cellSize * Math.floor(cells / 4));
     this.dir = new helpers.Vec(0, 0);
     this.type = type;
     this.index = i;
@@ -209,10 +209,9 @@ class Snake {
       }
     }
   }
-  // Функция для установки "границ" карты
+  // Функция для установки границ карты
   walls() {
     let { x, y } = this.pos;
-
     // Границы карты (Левая || Правая || Нижняя || Верхняя)
     if (x < 0 - cellSize || x > window.innerWidth || y > window.innerHeight || y < 0 - cellSize) gameOver();
   }
@@ -245,6 +244,9 @@ class Snake {
     if (!this.delay--) {
       for (let i = 0; i < appleCount; i++) {
         if (helpers.isCollision(this.pos, globalCoord[i])) {
+          // CTX2.clearRect(globalCoord[i].x, globalCoord[i].y, cellSize, cellSize);
+          
+          
           incrementScore();
           particleSplash();
           food.spawn();
@@ -293,17 +295,31 @@ class Food {
   }
   // Функция для отрисовки последующих яблок на случайной точке на карте
   spawn() {
-    let randX = rand(cellSize * 2, food_canvas.width - cellSize * 2);
-    let randY = rand(cellSize * 2, food_canvas.height - cellSize * 2);
-    globalCoord.push({ x: randX, y: randY });
+    // let randX = rand(cellSize * 2, food_canvas.width - cellSize * 2);
+    // let randY = rand(cellSize * 2, food_canvas.height - cellSize * 2);
+    // globalCoord.push({ x: randX, y: randY });
 
-    for (let path of snake.history) {
-      if (helpers.isCollision(new helpers.Vec(randX, randY), path)) {
-        return this.spawn();
-      }
-    }
+    // for (let path of snake.history) {
+    //   if (helpers.isCollision(new helpers.Vec(randX, randY), path)) {
+    //     return this.spawn();
+    //   }
+    // }
+    // this.color = currentHue = `hsl(${helpers.randHue()}, 100%, 50%)`;
+    // this.pos = new helpers.Vec(randX, randY);
+    let x = rand(cellSize * 2, dom_canvas.width - cellSize * 2);
+    let y = rand(cellSize * 2, dom_canvas.height - cellSize * 2);
+
+    globalCoord.push({ x: x, y: y });
+    appleCount++;
+
+    CTX2.globalCompositeOperation = "lighter";
+    CTX2.shadowBlur = 20;
+    CTX2.shadowColor = this.color;
+    CTX2.fillStyle = this.color;
+    CTX2.fillRect(x, y, this.size, this.size);
+    CTX2.globalCompositeOperation = "source-over";
+    CTX2.shadowBlur = 0;
     this.color = currentHue = `hsl(${helpers.randHue()}, 100%, 50%)`;
-    this.pos = new helpers.Vec(randX, randY);
   }
 }
 

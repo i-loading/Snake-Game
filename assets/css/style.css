@@ -56,11 +56,24 @@ h1 {
   font-weight: bold;
   color: #fff;
   text-shadow: 0px 0px 5px #fff;
+  transition: all 0.5s ease-in-out;
+}
+h1:hover {
+  animation: shadow 0.5s ease-in-out 0s 1;
+  text-shadow: 0px 0px 15px #fff;
 }
 @supports (-webkit-text-stroke: 1px white) {
   h1 {
     color: transparent;
     -webkit-text-stroke: 1px white;
+  }
+}
+@keyframes shadow {
+  from {
+    text-shadow: 0px 0px 5px #fff;
+  }
+  to {
+    text-shadow: 0px 0px 15px #fff;
   }
 }
 
@@ -93,7 +106,6 @@ main > * > * > img {
   transform: translate(-110%, -50%);
   transition: all 0.5s ease-in-out;
 }
-
 .dynamic_wrapper {
   top: 50%;
   right: 50%;

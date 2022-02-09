@@ -244,11 +244,11 @@ class Snake {
     if (!this.delay--) {
       for (let i = 0; i < appleCount; i++) {
         if (helpers.isCollision(this.pos, globalCoord[i])) {
+          // CTX2.clearRect(globalCoord[i].x - 20, globalCoord[i].y - 20, cellSize + cellSize + cellSize, cellSize + cellSize + cellSize);
           // CTX2.clearRect(globalCoord[i].x, globalCoord[i].y, cellSize, cellSize);
           
-          
           incrementScore();
-          particleSplash();
+          particleSplash(globalCoord[i].x, globalCoord[i].y, globalCoord[i].color);
           food.spawn();
           this.total++;
         }
@@ -281,7 +281,7 @@ class Food {
       x = rand(cellSize * 2, dom_canvas.width - cellSize * 2);
       y = rand(cellSize * 2, dom_canvas.height - cellSize * 2);
 
-      globalCoord.push({ x: x, y: y });
+      globalCoord.push({ x: x, y: y, color: this.color });
 
       CTX2.globalCompositeOperation = "lighter";
       CTX2.shadowBlur = 20;
@@ -309,7 +309,7 @@ class Food {
     let x = rand(cellSize * 2, dom_canvas.width - cellSize * 2);
     let y = rand(cellSize * 2, dom_canvas.height - cellSize * 2);
 
-    globalCoord.push({ x: x, y: y });
+    globalCoord.push({ x: x, y: y, color: this.color });
     appleCount++;
 
     CTX2.globalCompositeOperation = "lighter";
@@ -320,6 +320,13 @@ class Food {
     CTX2.globalCompositeOperation = "source-over";
     CTX2.shadowBlur = 0;
     this.color = currentHue = `hsl(${helpers.randHue()}, 100%, 50%)`;
+
+    for (let i = 0; i < appleCount; i++) {
+      if (helpers.isCollision(snake.pos, globalCoord[i])) {
+        globalCoord.splice(i, 1);
+        appleCount--;
+      }
+    }
   }
 }
 
@@ -367,11 +374,11 @@ function incrementScore() {
 }
 
 // Функция для отрисовки анимации частиц
-function particleSplash() {
+function particleSplash(x, y, color) {
   for (let i = 0; i < splashingParticleCount; i++) {
     let vel = new helpers.Vec(Math.random() * 6 - 3, Math.random() * 6 - 3);
-    let position = new helpers.Vec(food.pos.x, food.pos.y);
-    particles.push(new Particle(position, currentHue, food.size, vel));
+    let position = new helpers.Vec(x, y);
+    particles.push(new Particle(position, color, food.size, vel));
   }
 }
 

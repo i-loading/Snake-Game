@@ -231,9 +231,7 @@ class Snake {
   selfCollision() {
     for (let i = 0; i < this.history.length; i++) {
       let p = this.history[i];
-      if (helpers.isCollision(this.pos, p)) {
-        isGameOver = true;
-      }
+      if (helpers.isCollision(this.pos, p)) isGameOver = true;
     }
   }
   // Фукнция обновления(как loop)
@@ -244,7 +242,7 @@ class Snake {
     if (!this.delay--) {
       for (let i = 0; i < appleCount; i++) {
         if (helpers.isCollision(this.pos, globalCoord[i])) {
-          CTX2.clearRect(globalCoord[i].x - 2.5, globalCoord[i].y - 2.5, cellSize + 5, cellSize + 5);
+          CTX2.clearRect(globalCoord[i].x - 3, globalCoord[i].y - 3, cellSize + 6, cellSize + 6);
           
           incrementScore();
           particleSplash(globalCoord[i].x, globalCoord[i].y, globalCoord[i].color);
@@ -392,10 +390,7 @@ function initialize() {
 function loop() {
   clear();
   if (!isGameOver) {
-    // requestID = setTimeout(loop, 1000 / 60);
     requestID = window.requestAnimationFrame(loop);
-    // window.cancelAnimationFrame(requestID);
-
     snake.update();
     helpers.drawGrid();
     for (let p of particles) {

@@ -70,15 +70,37 @@ canvas {
   font-size: 20px;
   margin: 20px 0;
 }
+.btns {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 .game-over button {
   display: block;
   margin-top: 20px;
+  margin-right: 10px;
   background-color: #6e7888;
   color: #181825;
   font-size: 20px;
   font-weight: bold;
   padding: 15px 25px;
   border-radius: 5px;
+}
+.game-over a {
+  color: #6e7888;
+  display: block;
+  margin-top: 20px;
+  margin-left: 10px;
+  font-size: 20px;
+  font-weight: bold;
+  font-style: italic;
+  padding-bottom: 5px;
+  border-bottom: 4px solid #6e7888;
+  transition: all 0.2s ease-in-out;
+}
+.game-over a:hover {
+  border-bottom: 2px solid #6e7888;
+  padding-bottom: 7px;
 }
 
 .current-score {
